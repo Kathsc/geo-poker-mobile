@@ -251,18 +251,31 @@ function startVerticalFromHorizontal(anchorHorizontalIndex, direction) {
 function updateLayoutSizes() {
   const board = document.getElementById("board");
 
-  const maxHorizontal = Math.max(horizontalLine.length, 1);
-  const maxVertical = Math.max(verticalLine.length, 1);
+  const horizontalCount = Math.max(horizontalLine.length, 1);
+  const verticalCount = Math.max(verticalLine.length, 1);
 
-  const scaleX = board.clientWidth / (maxHorizontal * (baseCardW + baseGapX + 80));
-  const scaleY = board.clientHeight / (maxVertical * (baseCardH + baseGapY + 70));
+  const zoneMarginX = 120;
+  const zoneMarginY = 90;
+
+  const neededW =
+    horizontalCount * baseCardW +
+    (horizontalCount - 1) * baseGapX +
+    zoneMarginX;
+
+  const neededH =
+    verticalCount * baseCardH +
+    (verticalCount - 1) * baseGapY +
+    zoneMarginY;
+
+  const scaleX = board.clientWidth / neededW;
+  const scaleY = board.clientHeight / neededH;
 
   const scale = Math.min(1, scaleX, scaleY);
 
-  cardW = Math.max(85, baseCardW * scale);
-  cardH = Math.max(38, baseCardH * scale);
-  gapX = Math.max(8, baseGapX * scale);
-  gapY = Math.max(8, baseGapY * scale);
+  cardW = Math.max(42, baseCardW * scale);
+  cardH = Math.max(24, baseCardH * scale);
+  gapX = Math.max(2, baseGapX * scale);
+  gapY = Math.max(2, baseGapY * scale);
 }
 
 function render() {
@@ -337,7 +350,7 @@ function computeLayout() {
 }
 
 function shiftLayoutIntoBoard(items, board) {
-  const padding = 70;
+  const padding = 40;
 
   const minX = Math.min(...items.map(i => i.x));
   const maxX = Math.max(...items.map(i => i.x + cardW));
@@ -347,15 +360,8 @@ function shiftLayoutIntoBoard(items, board) {
   const layoutW = maxX - minX;
   const layoutH = maxY - minY;
 
-  const shiftX = Math.max(
-    padding - minX,
-    (board.clientWidth - layoutW) / 2 - minX
-  );
-
-  const shiftY = Math.max(
-    padding - minY,
-    (board.clientHeight - layoutH) / 2 - minY
-  );
+  const shiftX = (board.clientWidth - layoutW) / 2 - minX;
+  const shiftY = (board.clientHeight - layoutH) / 2 - minY;
 
   return items.map(i => ({
     ...i,
@@ -419,8 +425,8 @@ function drawCardElement(place, x, y) {
   card.style.top = y + "px";
   card.style.width = cardW + "px";
   card.style.height = cardH + "px";
-  card.style.paddingTop = Math.max(8, cardH * 0.25) + "px";
-  card.style.fontSize = Math.max(12, cardH * 0.28) + "px";
+  card.style.paddingTop = Math.max(3, cardH * 0.22) + "px";
+  card.style.fontSize = Math.max(7, cardH * 0.27) + "px";
   card.style.background = place.cardColor || "#333";
   card.innerHTML = place.name_de;
   document.getElementById("board").appendChild(card);
