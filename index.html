@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Geo Poker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1f2937">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Geo Poker">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div id="app">
+    <header>
+      <h1>Geo Poker</h1>
+
+      <div class="controls">
+        <label for="countrySelect">Land / Region</label>
+        <select id="countrySelect"></select>
+
+        <button onclick="newGame()">Neues Spiel</button>
+        <button onclick="stopGame()">Punkte sichern</button>
+      </div>
+
+      <div id="status"></div>
+      <div id="message"></div>
+    </header>
+
+    <main>
+      <div id="board"></div>
+    </main>
+  </div>
+
+  <script src="places_data.js"></script>
+  <script src="country_outlines.js"></script>
+  <script src="game.js"></script>
+
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js");
+    }
+  </script>
+</body>
+</html>
