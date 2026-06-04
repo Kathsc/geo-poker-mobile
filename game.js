@@ -376,46 +376,67 @@ function drawLayout(items) {
   });
 
   items.forEach(item => {
-    const vIndex = verticalLine.indexOf(item.place);
-    const hIndex = horizontalLine.indexOf(item.place);
+    addCardTouchZones(item);
+  });
+}
 
-    if (centerPlace === null) {
-      if (primaryAxis === "h") {
-        if (hIndex !== -1) {
-          addInsertZone("h", hIndex, item.x - 50, item.y + 10);
-          addInsertZone("h", hIndex + 1, item.x + cardW + 15, item.y + 10);
+function addCardTouchZones(item) {
+  const place = item.place;
+  const x = item.x;
+  const y = item.y;
 
-          addVerticalChoiceZone(hIndex, "n", item.x + 45, item.y - 45);
-          addVerticalChoiceZone(hIndex, "s", item.x + 45, item.y + cardH + 5);
-        }
-      } else {
-        if (vIndex !== -1) {
-          addInsertZone("v", vIndex, item.x + 45, item.y - 45);
-          addInsertZone("v", vIndex + 1, item.x + 45, item.y + cardH + 5);
+  const vIndex = verticalLine.indexOf(place);
+  const hIndex = horizontalLine.indexOf(place);
 
-          if (primaryAxis === null) {
-            addInitialHorizontalZone("w", item.x - 50, item.y + 10);
-            addInitialHorizontalZone("e", item.x + cardW + 15, item.y + 10);
-          } else {
-            addHorizontalChoiceZone(vIndex, "w", item.x - 50, item.y + 10);
-            addHorizontalChoiceZone(vIndex, "e", item.x + cardW + 15, item.y + 10);
-          }
-        }
-      }
-
+  if (centerPlace === null) {
+    if (primaryAxis === null) {
+      addTouchZone(x, y, cardW, cardH * 0.35, () => insertVertical(0));
+      addTouchZone(x, y + cardH * 0.65, cardW, cardH * 0.35, () => insertVertical(1));
+      addTouchZone(x, y, cardW * 0.35, cardH, () => insertHorizontal(0));
+      addTouchZone(x + cardW * 0.65, y, cardW * 0.35, cardH, () => insertHorizontal(1));
       return;
     }
 
+    if (primaryAxis === "v" && vIndex !== -1) {
+      addTouchZone(x, y, cardW, cardH * 0.35, () => insertVertical(vIndex));
+      addTouchZone(x, y + cardH * 0.65, cardW, cardH * 0.35, () => insertVertical(vIndex + 1));
+      addTouchZone(x, y, cardW * 0.35, cardH, () => startHorizontalFromVertical(vIndex, "w"));
+      addTouchZone(x + cardW * 0.65, y, cardW * 0.35, cardH, () => startHorizontalFromVertical(vIndex, "e"));
+      return;
+    }
+
+    if (primaryAxis === "h" && hIndex !== -1) {
+      addTouchZone(x, y, cardW, cardH * 0.35, () => startVerticalFromHorizontal(hIndex, "n"));
+      addTouchZone(x, y + cardH * 0.65, cardW, cardH * 0.35, () => startVerticalFromHorizontal(hIndex, "s"));
+      addTouchZone(x, y, cardW * 0.35, cardH, () => insertHorizontal(hIndex));
+      addTouchZone(x + cardW * 0.65, y, cardW * 0.35, cardH, () => insertHorizontal(hIndex + 1));
+      return;
+    }
+  }
+
+  if (centerPlace !== null) {
     if (vIndex !== -1) {
-      addInsertZone("v", vIndex, item.x + 45, item.y - 45);
-      addInsertZone("v", vIndex + 1, item.x + 45, item.y + cardH + 5);
+      addTouchZone(x, y, cardW, cardH * 0.35, () => insertVertical(vIndex));
+      addTouchZone(x, y + cardH * 0.65, cardW, cardH * 0.35, () => insertVertical(vIndex + 1));
     }
 
     if (hIndex !== -1) {
-      addInsertZone("h", hIndex, item.x - 50, item.y + 10);
-      addInsertZone("h", hIndex + 1, item.x + cardW + 15, item.y + 10);
+      addTouchZone(x, y, cardW * 0.35, cardH, () => insertHorizontal(hIndex));
+      addTouchZone(x + cardW * 0.65, y, cardW * 0.35, cardH, () => insertHorizontal(hIndex + 1));
     }
-  });
+  }
+}
+
+function addTouchZone(x, y, w, h, action) {
+  const zone = document.createElement("div");
+  zone.className = "touch-zone";
+  zone.style.left = x + "px";
+  zone.style.top = y + "px";
+  zone.style.width = w + "px";
+  zone.style.height = h + "px";
+  zone.onclick = action;
+
+  document.getElementById("board").appendChild(zone);
 }
 
 function drawCardElement(place, x, y) {
