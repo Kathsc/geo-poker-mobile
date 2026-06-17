@@ -251,31 +251,18 @@ function startVerticalFromHorizontal(anchorHorizontalIndex, direction) {
 function updateLayoutSizes() {
   const board = document.getElementById("board");
 
-  const horizontalCount = Math.max(horizontalLine.length, 1);
-  const verticalCount = Math.max(verticalLine.length, 1);
+  const maxHorizontal = Math.max(horizontalLine.length, 1);
+  const maxVertical = Math.max(verticalLine.length, 1);
 
-  const zoneMarginX = 120;
-  const zoneMarginY = 90;
-
-  const neededW =
-    horizontalCount * baseCardW +
-    (horizontalCount - 1) * baseGapX +
-    zoneMarginX;
-
-  const neededH =
-    verticalCount * baseCardH +
-    (verticalCount - 1) * baseGapY +
-    zoneMarginY;
-
-  const scaleX = board.clientWidth / neededW;
-  const scaleY = board.clientHeight / neededH;
+  const scaleX = board.clientWidth / (maxHorizontal * (baseCardW + baseGapX + 80));
+  const scaleY = board.clientHeight / (maxVertical * (baseCardH + baseGapY + 70));
 
   const scale = Math.min(1, scaleX, scaleY);
 
-  cardW = Math.max(42, baseCardW * scale);
-  cardH = Math.max(24, baseCardH * scale);
-  gapX = Math.max(2, baseGapX * scale);
-  gapY = Math.max(2, baseGapY * scale);
+  cardW = Math.max(85, baseCardW * scale);
+  cardH = Math.max(38, baseCardH * scale);
+  gapX = Math.max(8, baseGapX * scale);
+  gapY = Math.max(8, baseGapY * scale);
 }
 
 function render() {
@@ -350,7 +337,7 @@ function computeLayout() {
 }
 
 function shiftLayoutIntoBoard(items, board) {
-  const padding = 40;
+  const padding = 70;
 
   const minX = Math.min(...items.map(i => i.x));
   const maxX = Math.max(...items.map(i => i.x + cardW));
@@ -360,8 +347,15 @@ function shiftLayoutIntoBoard(items, board) {
   const layoutW = maxX - minX;
   const layoutH = maxY - minY;
 
-  const shiftX = (board.clientWidth - layoutW) / 2 - minX;
-  const shiftY = (board.clientHeight - layoutH) / 2 - minY;
+  const shiftX = Math.max(
+    padding - minX,
+    (board.clientWidth - layoutW) / 2 - minX
+  );
+
+  const shiftY = Math.max(
+    padding - minY,
+    (board.clientHeight - layoutH) / 2 - minY
+  );
 
   return items.map(i => ({
     ...i,
@@ -376,67 +370,46 @@ function drawLayout(items) {
   });
 
   items.forEach(item => {
-    addCardTouchZones(item);
-  });
-}
+    const vIndex = verticalLine.indexOf(item.place);
+    const hIndex = horizontalLine.indexOf(item.place);
 
-function addCardTouchZones(item) {
-  const place = item.place;
-  const x = item.x;
-  const y = item.y;
+    if (centerPlace === null) {
+      if (primaryAxis === "h") {
+        if (hIndex !== -1) {
+          addInsertZone("h", hIndex, item.x - 50, item.y + 10);
+          addInsertZone("h", hIndex + 1, item.x + cardW + 15, item.y + 10);
 
-  const vIndex = verticalLine.indexOf(place);
-  const hIndex = horizontalLine.indexOf(place);
+          addVerticalChoiceZone(hIndex, "n", item.x + 45, item.y - 45);
+          addVerticalChoiceZone(hIndex, "s", item.x + 45, item.y + cardH + 5);
+        }
+      } else {
+        if (vIndex !== -1) {
+          addInsertZone("v", vIndex, item.x + 45, item.y - 45);
+          addInsertZone("v", vIndex + 1, item.x + 45, item.y + cardH + 5);
 
-  if (centerPlace === null) {
-    if (primaryAxis === null) {
-      addTouchZone(x, y, cardW, cardH * 0.35, () => insertVertical(0));
-      addTouchZone(x, y + cardH * 0.65, cardW, cardH * 0.35, () => insertVertical(1));
-      addTouchZone(x, y, cardW * 0.35, cardH, () => insertHorizontal(0));
-      addTouchZone(x + cardW * 0.65, y, cardW * 0.35, cardH, () => insertHorizontal(1));
+          if (primaryAxis === null) {
+            addInitialHorizontalZone("w", item.x - 50, item.y + 10);
+            addInitialHorizontalZone("e", item.x + cardW + 15, item.y + 10);
+          } else {
+            addHorizontalChoiceZone(vIndex, "w", item.x - 50, item.y + 10);
+            addHorizontalChoiceZone(vIndex, "e", item.x + cardW + 15, item.y + 10);
+          }
+        }
+      }
+
       return;
     }
 
-    if (primaryAxis === "v" && vIndex !== -1) {
-      addTouchZone(x, y, cardW, cardH * 0.35, () => insertVertical(vIndex));
-      addTouchZone(x, y + cardH * 0.65, cardW, cardH * 0.35, () => insertVertical(vIndex + 1));
-      addTouchZone(x, y, cardW * 0.35, cardH, () => startHorizontalFromVertical(vIndex, "w"));
-      addTouchZone(x + cardW * 0.65, y, cardW * 0.35, cardH, () => startHorizontalFromVertical(vIndex, "e"));
-      return;
-    }
-
-    if (primaryAxis === "h" && hIndex !== -1) {
-      addTouchZone(x, y, cardW, cardH * 0.35, () => startVerticalFromHorizontal(hIndex, "n"));
-      addTouchZone(x, y + cardH * 0.65, cardW, cardH * 0.35, () => startVerticalFromHorizontal(hIndex, "s"));
-      addTouchZone(x, y, cardW * 0.35, cardH, () => insertHorizontal(hIndex));
-      addTouchZone(x + cardW * 0.65, y, cardW * 0.35, cardH, () => insertHorizontal(hIndex + 1));
-      return;
-    }
-  }
-
-  if (centerPlace !== null) {
     if (vIndex !== -1) {
-      addTouchZone(x, y, cardW, cardH * 0.35, () => insertVertical(vIndex));
-      addTouchZone(x, y + cardH * 0.65, cardW, cardH * 0.35, () => insertVertical(vIndex + 1));
+      addInsertZone("v", vIndex, item.x + 45, item.y - 45);
+      addInsertZone("v", vIndex + 1, item.x + 45, item.y + cardH + 5);
     }
 
     if (hIndex !== -1) {
-      addTouchZone(x, y, cardW * 0.35, cardH, () => insertHorizontal(hIndex));
-      addTouchZone(x + cardW * 0.65, y, cardW * 0.35, cardH, () => insertHorizontal(hIndex + 1));
+      addInsertZone("h", hIndex, item.x - 50, item.y + 10);
+      addInsertZone("h", hIndex + 1, item.x + cardW + 15, item.y + 10);
     }
-  }
-}
-
-function addTouchZone(x, y, w, h, action) {
-  const zone = document.createElement("div");
-  zone.className = "touch-zone";
-  zone.style.left = x + "px";
-  zone.style.top = y + "px";
-  zone.style.width = w + "px";
-  zone.style.height = h + "px";
-  zone.onclick = action;
-
-  document.getElementById("board").appendChild(zone);
+  });
 }
 
 function drawCardElement(place, x, y) {
@@ -446,8 +419,8 @@ function drawCardElement(place, x, y) {
   card.style.top = y + "px";
   card.style.width = cardW + "px";
   card.style.height = cardH + "px";
-  card.style.paddingTop = Math.max(3, cardH * 0.22) + "px";
-  card.style.fontSize = Math.max(7, cardH * 0.27) + "px";
+  card.style.paddingTop = Math.max(8, cardH * 0.25) + "px";
+  card.style.fontSize = Math.max(12, cardH * 0.28) + "px";
   card.style.background = place.cardColor || "#333";
   card.innerHTML = place.name_de;
   document.getElementById("board").appendChild(card);
@@ -538,28 +511,34 @@ function getAllPlacedPlaces() {
   return result;
 }
 
+function prettyDatasetName(key) {
+  return key
+    .replaceAll("_orte_koordinaten", "")
+    .replaceAll("_", " ")
+    .replace(/\w/g, c => c.toUpperCase());
+}
+
 function populateCountryDropdown() {
   const select = document.getElementById("countrySelect");
 
   select.innerHTML = "";
 
-  Object.keys(COUNTRY_DATA)
-    .sort()
-    .forEach(country => {
+  const keys = Object.keys(COUNTRY_DATA).sort();
 
-      const option = document.createElement("option");
+  keys.forEach(key => {
+    const option = document.createElement("option");
 
-      option.value = country;
+    option.value = key;
+    option.textContent = prettyDatasetName(key);
 
-      option.textContent =
-        country.charAt(0).toUpperCase() +
-        country.slice(1);
+    select.appendChild(option);
+  });
 
-      select.appendChild(option);
-    });
+  if (!COUNTRY_DATA[selectedCountry]) {
+    selectedCountry = keys[0];
+  }
 
   select.value = selectedCountry;
-
   select.onchange = changeCountry;
 }
 
