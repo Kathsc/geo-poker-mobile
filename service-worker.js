@@ -1,4 +1,4 @@
-const CACHE_NAME = "geo-poker-v1";
+const CACHE_NAME = "geo-poker-v2";
 
 const FILES_TO_CACHE = [
   "./",
